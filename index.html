@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M&M-Sorting-Machine</title>
+</head>
+<style>
+    html, body { 
+        margin: 0;
+        background-color: black;
+        overflow: hidden;
+    }
+</style>
+<body>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/poly-decomp@0.3.0/build/decomp.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.16.0/build/matter.js"></script>
+    <script type="module">
+        const socket = io();
+        socket.on('update', (data) => {
+            setOutletRotation(data.outletRotation);
+            setCwRotation(data.cwRotation);
+        });
+
+        
+        window.addEventListener('load', () => {
+            document.body.onmousedown = function() { 
+                spawnBall();
+            }
+            document.body.onmouseup = function() {
+                dropBall();
+            }
+        });
+
+        const colorCodes = ['#b11224', '#31ac55', '#2f9fd7', '#603a34', '#f26f22', '#fff200']
+        const Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Common = Matter.Common,
+        MouseConstraint = Matter.MouseConstraint,
+        Mouse = Matter.Mouse,
+        World = Matter.World,
+        Body = Matter.Body,
+        Vertices = Matter.Vertices,
+        Svg = Matter.Svg,
+        Events = Matter.Events,
+        Bodies = Matter.Bodies;
+
+        // create engine
+        const engine = Engine.create(),
+            world = engine.world;
+
+        // create renderer
+        const render = Render.create({
+            element: document.body,
+            engine: engine,
+            options: {
+                width: 800,
+                height: 600,
+                wireframes: false
+            }
+        });
+
+        // create world
+
+        const ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
+
+        let colorWheelRadius = 50;
+        let points = []
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI * 2 / 24) {
+            if (Math.round(angle / Math.PI * 180) % 90 === 0) {
+                const angleOffset = Math.PI * 2 / 20;
+                const deep = 18;
+                points.push({ x: Math.sin(angle - angleOffset) * (colorWheelRadius - deep), y: Math.cos(angle - angleOffset) * (colorWheelRadius - deep) })
+                points.push({ x: Math.sin(angle + angleOffset) * (colorWheelRadius - deep), y: Math.cos(angle + angleOffset) * (colorWheelRadius - deep) })
+            } else {
+                points.push({ x: Math.sin(angle) * colorWheelRadius, y: Math.cos(angle) * colorWheelRadius })
+            }
+        }
+        const colorWheel = Bodies.fromVertices(400, 205, [points], { isStatic: true });
+        World.add(engine.world, colorWheel)
+
+        let colorWheelHullRadius = 50;
+        let pointsHullRight = [];
+        let pointsHullLeft = [];
+        let angle = Math.PI * 2 / 16;
+        for (angle; angle < Math.PI * 2; angle += Math.PI * 2 / 16) {
+            pointsHullRight.push({ x: Math.sin(angle) * (colorWheelRadius + 2), y: Math.cos(angle) * (colorWheelRadius + 2) })
+        }
+        angle = Math.PI - 0.2;
+        for (angle; angle > 0; angle -= Math.PI * 2 / 16) {
+            pointsHullRight.push({ x: Math.sin(angle) * (colorWheelRadius + 10), y: Math.cos(angle) * (colorWheelRadius + 10) })
+        }
+        angle = Math.PI + Math.PI * 2 / 16;
+        for (angle; angle < Math.PI * 2; angle += Math.PI * 2 / 16) {
+            pointsHullLeft.push({ x: Math.sin(angle) * (colorWheelRadius + 2), y: Math.cos(angle) * (colorWheelRadius + 2) })
+        }
+        angle = Math.PI * 2 - 0.2;
+        for (angle; angle > Math.PI; angle -= Math.PI * 2 / 16) {
+            pointsHullLeft.push({ x: Math.sin(angle) * (colorWheelRadius + 10), y: Math.cos(angle) * (colorWheelRadius + 10) })
+        }
+        const colorWheelHull = Bodies.fromVertices(400, 205, [pointsHullRight, pointsHullLeft], { isStatic: true });
+        World.add(engine.world, colorWheelHull)
+
+        let colorSensor = Bodies.circle(400, 320, 6, { 
+            isStatic: true,
+            isSensor: true,
+        })
+        World.add(engine.world, colorSensor)
+
+        let objectSensor = Bodies.circle(400, 320, 6, {
+            isStatic: true,
+            isSensor: true,
+        })
+        World.add(engine.world, objectSensor)
+
+        Events.on(engine, 'collisionStart', function(event) {
+            var pairs = event.pairs;
+            
+            for (var i = 0, j = pairs.length; i != j; ++i) {
+                var pair = pairs[i];
+
+                // color sensor detected;
+                if (pair.bodyA === colorSensor) {
+                    updateColorSensor(pair.bodyB, true)
+                } else if (pair.bodyB === colorSensor) {
+                    updateColorSensor(pair.bodyA, true)
+                }
+            }
+        });
+
+        Events.on(engine, 'collisionEnd', function(event) {
+            var pairs = event.pairs;
+            
+            for (var i = 0, j = pairs.length; i != j; ++i) {
+                var pair = pairs[i];
+
+                // color sensor detected;
+                if (pair.bodyA === colorSensor) {
+                    updateColorSensor(pair.bodyB, false)
+                } else if (pair.bodyB === colorSensor) {
+                    updateColorSensor(pair.bodyA, false)
+                }
+            }
+        });
+
+        function updateColorSensor(body, start) {
+            if (start) {
+                body.render.lineWidth = 2;
+                const colorCode = body.render.fillStyle;
+                const color = colorCodes.findIndex((value) => value === colorCode) + 1
+                //console.log('New Color detected: ' + color)
+                socket.emit('updateColor', color);
+            } else {
+                body.render.lineWidth = 0;
+                //console.log('New Color detected: 0');
+                socket.emit('updateColor', 0);
+            }
+        }
+
+        const radius = 8;
+        /*
+        const funnelWall = 20;
+        const funnelRadius = radius + funnelWall;
+        const funnelHeight = 100;
+        const funnel = Bodies.fromVertices(400, 100, [
+            [
+                { x: -funnelRadius, y: 0 },
+                { x: funnelRadius, y: 0 },
+                { x: funnelRadius, y: funnelHeight },
+                { x: funnelRadius-funnelWall, y: funnelHeight },
+                { x: funnelRadius-funnelWall, y: funnelWall },
+                { x: -funnelRadius+funnelWall, y: funnelWall },
+                { x: -funnelRadius+funnelWall, y: funnelWall },
+                { x: -funnelRadius+funnelWall, y: funnelHeight },
+                { x: -funnelRadius, y: funnelHeight },
+            ]
+        ], { isStatic: true })*/
+
+        const bowlRadius = 50;
+        const bowlWall = 8;
+        const bowlHeight = 100;
+        let bowls = [];
+        for (let index = 0; index < 6; index++) {
+            const bowl = Bodies.fromVertices(800 / 6 * index + bowlRadius + ((800 / 6) - bowlRadius * 2) / 2, 545, [
+                [
+                    { x: -bowlRadius, y: 0 },
+                    { x: bowlRadius, y: 0 },
+                    { x: bowlRadius, y: -bowlHeight },
+                    { x: bowlRadius-bowlWall, y: -bowlHeight },
+                    { x: bowlRadius-bowlWall, y: -bowlWall },
+                    { x: -bowlRadius+bowlWall, y: -bowlWall },
+                    { x: -bowlRadius+bowlWall, y: -bowlWall },
+                    { x: -bowlRadius+bowlWall, y: -bowlHeight },
+                    { x: -bowlRadius, y: -bowlHeight },
+                ]
+            ], { isStatic: true })
+            bowls.push(bowl);   
+        }
+
+        // add all of the bodies to the world
+        World.add(engine.world, bowls)
+        World.add(engine.world, [ground]);
+
+        // run the engine
+        Engine.run(engine);
+
+        // run the renderer
+        Render.run(render);
+
+        let rotation = 0;
+        function setOutletRotation(newRotation) {
+            rotation = newRotation;
+            const oldX = colorWheel.position.x;
+            const x = (rotation * 800 + 800 / 12) % 800;
+            Body.setPosition(colorWheel, { x: x, y: 320 });
+            Body.setPosition(colorWheelHull, { x: x, y: 320 });
+            Body.setPosition(colorSensor, { x: x + 40, y: 320});
+            Body.setPosition(objectSensor, { x: x - 40, y: 320});
+            if (nextBall != undefined) {
+                Body.setPosition(nextBall, { x: x, y: nextBall.position.y });
+            }
+        }
+
+        let cwRotation = 0;
+        function setCwRotation(newRotation) {
+            cwRotation = newRotation;
+            Body.setAngle(colorWheel, cwRotation * Math.PI * 2);
+        }
+
+        setInterval(() => {
+            if (nextBall != undefined && nextBall.position.y > colorWheel.position.y - 60) {
+                spawnBall();
+            }
+            if (currentBall != undefined && currentBall.position.y > colorWheel.position.y - 30) {
+                dropBall();
+            }
+        }, 100)
+
+        let nextBall;
+        let currentBall;
+        function spawnBall(color) {
+            nextBall = Bodies.circle(colorWheel.position.x + 1, colorWheel.position.y - 80, radius + 2, {
+                render: {
+                    fillStyle: colorCodes[Math.floor(Math.random() * colorCodes.length)],
+                    strokeStyle: 'white',
+                    lineWidth: 0
+                },
+                isStatic: true
+            });
+            World.add(engine.world, nextBall);
+        }
+
+        function dropBall() {
+            currentBall = nextBall;
+            Body.setStatic(currentBall, false);
+        }
+
+    </script>
+</body>
+</html>
