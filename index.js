@@ -1,7 +1,7 @@
 /** config */
 const OUTLET_ROTATION_STEPS = 400;
 const CW_ROTATION_STEPS = 1600;
-const HALL_TOLERANCE = 0;
+const HALL_TOLERANCE = 20;
 
 const COLORS = ['red', 'green', 'blue', 'brown', 'orange', 'yellow'];
 
@@ -24,7 +24,7 @@ const outletActivePin = new Gpio(11, 'in', 'none', { activeLow: true });
 const outletStepPin = new Gpio(12, 'in', 'falling'); // { debounceTimeout: 5 }
 const outletDirectionPin = new Gpio(26, 'in', 'none');
 
-const cwActivePin = new Gpio(17, 'in', 'both');
+const cwActivePin = new Gpio(17, 'in', 'both', { activeLow: true });
 const cwStepPin = new Gpio(13, 'in', 'falling'); // { debounceTimeout: 5 }
 const cwDirectionPin = new Gpio(16, 'in', 'none'); 
 const cwObject = new Gpio(25, 'out');
@@ -68,8 +68,8 @@ initPinStates();
 
 outletStepPin.watch((err, value) => {
     if (outletActivePin.readSync()) {
-        console.log('[Warning] Stepping, while outlet is not active!')
-        return;
+        //console.log('[Warning] Stepping, while outlet is not active!')
+        //return;
     }
     if (!outletDirectionPin.readSync()) {
         outletStepCount++;
@@ -86,7 +86,7 @@ outletStepPin.watch((err, value) => {
 });
 
 function updateHallOutlet() { 
-    if (outletStepCount <= HALL_TOLERANCE || outletStepCount >= OUTLET_ROTATION_STEPS + HALL_TOLERANCE) {
+    if (outletStepCount <= HALL_TOLERANCE || outletStepCount >= OUTLET_ROTATION_STEPS - HALL_TOLERANCE) {
         hallOutlet.writeSync(1);
     } else {
         hallOutlet.writeSync(0);
@@ -95,8 +95,8 @@ function updateHallOutlet() {
 
 cwStepPin.watch((err, value) => {
     if (cwActivePin.readSync()) {
-        console.log('[Warning] Stepping, while outlet is not active!')
-        return;
+        //console.log('[Warning] Stepping, while outlet is not active!')
+        //return;
     }
     if (!cwDirectionPin.readSync()) {
         cwStepCount++;
@@ -113,7 +113,8 @@ cwStepPin.watch((err, value) => {
 });
 
 function updateHallCw() {
-    if (cwStepPin % (CW_ROTATION_STEPS / 4) <= HALL_TOLERANCE || cwStepPin % (CW_ROTATION_STEPS / 4) >= OUTLET_ROTATION_STEPS + HALL_TOLERANCE) {
+    const quater = (CW_ROTATION_STEPS / 4)
+    if (cwStepCount % quater <= HALL_TOLERANCE * 4 || cwStepCount % quater >= quater - HALL_TOLERANCE * 4) {
         hallColorWheel.writeSync(1);
     } else {
         hallColorWheel.writeSync(0);
@@ -156,12 +157,12 @@ function segmentMultiplexDidChange(bit1, bit0) {
 function setColor(color) {
     let bits;
     switch (color) {
-        case 'red': bits = [0,0,1]; break;
-        case 'green': bits = [0,1,0]; break;
-        case 'blue': bits = [0,1,1]; break;
-        case 'brown': bits = [1,0,0]; break;
-        case 'orange': bits = [1,0,1]; break;
-        case 'yellow': bits = [1,1,0]; break;
+        case 1: bits = [0,0,1]; break;
+        case 2: bits = [0,1,0]; break;
+        case 3: bits = [0,1,1]; break;
+        case 4: bits = [1,0,0]; break;
+        case 5: bits = [1,0,1]; break;
+        case 6: bits = [1,1,0]; break;
         default: 
             bits = [0,0,0]
             color = undefined
@@ -188,7 +189,7 @@ io.on('connection', (socket) => {
     console.log('a user connected');
     /** recieve simulation data */
     socket.on('updateColor', (newColor) => {
-        currentDetectedColor = newColor;
+        setColor(newColor)
     });
 });
 
@@ -233,7 +234,7 @@ function consoleInfo() {
     Rotation:\t\t${(Math.round(cwStepCount / CW_ROTATION_STEPS * 360))%360}°  
     Hall Outlet:\t${hallColorWheel.readSync()}     
 
-    Current Color:\t${currentDetectedColor} => ${currentDetectedColor === 0 ? 'N/A' : COLORS[currentDetectedColor - 1]}            
+    Current Color:\t${currentDetectedColor} => ${currentDetectedColor === 0 ? 'N/A' : COLORS[currentDetectedColor - 1]} ${colorBit2Pin.readSync()}${colorBit1Pin.readSync()}${colorBit0Pin.readSync()}         
     
     Segment Display:\t${segmentToNumber(lastValueSegment0)} | ${segmentToNumber(lastValueSegment1)} | ${segmentToNumber(lastValueSegment2)} | ${segmentToNumber(lastValueSegment3)}
     
