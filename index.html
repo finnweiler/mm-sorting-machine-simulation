@@ -21,19 +21,14 @@
         socket.on('update', (data) => {
             setOutletRotation(data.outletRotation);
             setCwRotation(data.cwRotation);
-            spawnBall()
-            dropBall()
         });
 
-        /*
         setTimeout(() => {
-            setOutletRotation(0)
-
+            spawnBall()
             setTimeout(() => {
-                spawnBall()
                 dropBall()
             }, 100)
-        }, 100)
+        }, 900)
 
         setTimeout(() => {
 
