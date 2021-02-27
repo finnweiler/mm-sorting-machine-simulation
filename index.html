@@ -21,15 +21,43 @@
         socket.on('update', (data) => {
             setOutletRotation(data.outletRotation);
             setCwRotation(data.cwRotation);
+            spawnBall()
+            dropBall()
         });
+
+        /*
+        setTimeout(() => {
+            setOutletRotation(0)
+
+            setTimeout(() => {
+                spawnBall()
+                dropBall()
+            }, 100)
+        }, 100)
+
+        setTimeout(() => {
+
+            let outletRotation = 0;
+            let cwRotation = 0;
+            setInterval(() => {
+                setOutletRotation(outletRotation)
+                outletRotation -= 1 / 400
+                if (outletRotation < 0) {
+                    outletRotation = 1 - outletRotation 
+                }
+                setCwRotation(cwRotation);
+                cwRotation += 1 / 800
+            }, 30)
+        }, 1000)
+        */
 
         
         window.addEventListener('load', () => {
             document.body.onmousedown = function() { 
-                spawnBall();
+                //spawnBall();
             }
             document.body.onmouseup = function() {
-                dropBall();
+                //dropBall();
             }
         });
 
@@ -221,6 +249,14 @@
             if (nextBall != undefined) {
                 Body.setPosition(nextBall, { x: x, y: nextBall.position.y });
             }
+
+            const d = x - oldX
+            if (currentBall != undefined) {
+                Body.setPosition(currentBall, { x: currentBall.position.x + d, y: currentBall.position.y })
+            }
+            if (lastBall != undefined) {
+                Body.setPosition(lastBall, { x: lastBall.position.x + d, y: lastBall.position.y })
+            }
         }
 
         let cwRotation = 0;
@@ -240,6 +276,7 @@
 
         let nextBall;
         let currentBall;
+        let lastBall;
         function spawnBall(color) {
             nextBall = Bodies.circle(colorWheel.position.x + 1, colorWheel.position.y - 80, radius + 2, {
                 render: {
@@ -253,6 +290,7 @@
         }
 
         function dropBall() {
+            lastBall = currentBall;
             currentBall = nextBall;
             Body.setStatic(currentBall, false);
         }

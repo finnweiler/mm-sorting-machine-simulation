@@ -157,6 +157,7 @@ function segmentMultiplexDidChange(bit1, bit0) {
 function setColor(color) {
     let bits;
     switch (color) {
+        case 0: bits = [0,0,0]; break;
         case 1: bits = [0,0,1]; break;
         case 2: bits = [0,1,0]; break;
         case 3: bits = [0,1,1]; break;
@@ -229,12 +230,13 @@ function consoleInfo() {
     Step Count:\t\t${outletStepCount} of ${OUTLET_ROTATION_STEPS} steps         
     Rotation:\t\t${(Math.round(outletStepCount / OUTLET_ROTATION_STEPS * 360))%360}°  
     Hall Outlet:\t${hallOutlet.readSync()}     
+    Dir Outlet:\t\t${outletDirectionPin.readSync()}     
     
     Step Count:\t\t${cwStepCount} of ${CW_ROTATION_STEPS} steps         
     Rotation:\t\t${(Math.round(cwStepCount / CW_ROTATION_STEPS * 360))%360}°  
-    Hall Outlet:\t${hallColorWheel.readSync()}     
+    Hall VW:\t\t${hallColorWheel.readSync()}     
 
-    Current Color:\t${currentDetectedColor} => ${currentDetectedColor === 0 ? 'N/A' : COLORS[currentDetectedColor - 1]} ${colorBit2Pin.readSync()}${colorBit1Pin.readSync()}${colorBit0Pin.readSync()}         
+    Current Color:\t${currentDetectedColor} => ${currentDetectedColor === 0 ? 'N/A' : COLORS[currentDetectedColor - 1]} ${colorBit2Pin.readSync()}${colorBit1Pin.readSync()}${colorBit0Pin.readSync()}                             
     
     Segment Display:\t${segmentToNumber(lastValueSegment0)} | ${segmentToNumber(lastValueSegment1)} | ${segmentToNumber(lastValueSegment2)} | ${segmentToNumber(lastValueSegment3)}
     
