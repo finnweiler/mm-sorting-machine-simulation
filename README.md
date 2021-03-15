@@ -19,6 +19,13 @@ check if node is installed:
 
 5. `node -v`
 
+clone the github project:
+
+6. `git clone git@github.com:hans24o/mm-sorting-machine-simulation.git`
+
+install dependencies:
+
+7. `npm install`
 
 ## Run
 
