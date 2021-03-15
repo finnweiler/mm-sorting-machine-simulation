@@ -35,6 +35,7 @@ You can now open your browser and enter your Raspberry Pi's hostname (for exampl
 
 ## Demo
 ![demo image](docs/preview.png)
+![demo image2](docs/preview2.png)
 
 ## Notes
 
