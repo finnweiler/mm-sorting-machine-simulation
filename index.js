@@ -14,7 +14,7 @@ const segmentShiftRegisterPin = new Gpio(3, 'in', 'rising');     // Clock input 
 const segmentClearRegisterPin = new Gpio(4, 'in', 'both', { activeLow: true });    //
 const segmentStoreRegisterPin = new Gpio(5, 'in', 'both');         //
 const segmentBit0Pin = new Gpio(6, 'in', 'both');            //
-const segmentBit1Pin = new Gpio(14, 'in', 'both'); // eig. Pin 7
+const segmentBit1Pin = new Gpio(7, 'in', 'both'); // eig. Pin 7
 
 const button1Pin = new Gpio(15, 'out', { activeLow: true });  // eig. Pin 8
 const button2Pin = new Gpio(9, 'out', { activeLow: true });   //
@@ -257,7 +257,8 @@ function consoleInfo() {
     Current Color:\t${currentDetectedColor} => ${currentDetectedColor === 0 ? 'N/A' : COLORS[currentDetectedColor - 1]} ${colorBit2Pin.readSync()}${colorBit1Pin.readSync()}${colorBit0Pin.readSync()}                             
     
     Segment Display:\t${segmentToNumber(lastValueSegment0)} | ${segmentToNumber(lastValueSegment1)} | ${segmentToNumber(lastValueSegment2)} | ${segmentToNumber(lastValueSegment3)}
-    
+    Segment Debug:\t2:${segmentSerialInputPin.readSync()} 3:${segmentShiftRegisterPin.readSync()} 4:${segmentClearRegisterPin.readSync()} 5:${segmentStoreRegisterPin.readSync()} 6:${segmentBit0Pin.readSync()} 7:${segmentBit1Pin.readSync()}
+
     Segment Register:\t${createBinaryString(segmentRegister)} ${segmentSerialInputPin.readSync()}
     Segment Output:\t${createBinaryString(segmentOutput)}
 
