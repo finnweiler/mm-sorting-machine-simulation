@@ -62,6 +62,10 @@ let lastValueSegment3 = 0b0;
 
 function initPinStates() {
     updateHallOutlet();
+
+    button1Pin.writeSync(0);
+    button2Pin.writeSync(0);
+    button3Pin.writeSync(0);
 }
 
 initPinStates();
@@ -176,6 +180,16 @@ function setColor(color) {
     currentDetectedColor = color;
 }
 
+function setButton(button, state) {
+    switch (button) {
+        case 1: button1Pin.writeSync(state); break;
+        case 2: button2Pin.writeSync(state); break;
+        case 3: button3Pin.writeSync(state); break;
+        default:
+            console.log('[Warning] Invalid button set.')
+    }
+}
+
 /** update front-end */
 
 const app = require('express')();
@@ -192,6 +206,10 @@ io.on('connection', (socket) => {
     socket.on('updateColor', (newColor) => {
         setColor(newColor)
     });
+    /** revieve button data */
+    socket.on('updateButton', ({ button, state }) => {
+        setButton(button, state)
+    })
 });
 
 http.listen(80, () => {

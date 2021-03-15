@@ -11,6 +11,12 @@
         background-color: black;
         overflow: hidden;
     }
+
+    .buttons {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
 </style>
 <body>
     <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
@@ -30,31 +36,11 @@
             }, 100)
         }, 900)
 
-        /*
-        setTimeout(() => {
-
-            let outletRotation = 0;
-            let cwRotation = 0;
-            setInterval(() => {
-                setOutletRotation(outletRotation)
-                outletRotation -= 1 / 400
-                if (outletRotation < 0) {
-                    outletRotation = 1 - outletRotation 
-                }
-                setCwRotation(cwRotation);
-                cwRotation += 1 / 800
-            }, 30)
-        }, 1000)
-        */
-        
-        window.addEventListener('load', () => {
-            document.body.onmousedown = function() { 
-                //spawnBall();
-            }
-            document.body.onmouseup = function() {
-                //dropBall();
-            }
-        });
+        function setButton(button, state) {
+            console.log('test')
+            socket.emit('updateButton', { button, state })
+        }
+        window.setButton = setButton
 
         const colorCodes = ['#b11224', '#31ac55', '#2f9fd7', '#603a34', '#f26f22', '#fff200']
         const Engine = Matter.Engine,
@@ -291,5 +277,11 @@
         }
 
     </script>
+
+    <div class="buttons">
+        <button onmousedown="setButton(1, 1)" onmouseup="setButton(1, 0)">Button 1</button>
+        <button onmousedown="setButton(2, 1)" onmouseup="setButton(2, 0)">Button 2</button>
+        <button onmousedown="setButton(3, 1)" onmouseup="setButton(3, 0)">Button 3</button>
+    </div>
 </body>
 </html>
