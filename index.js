@@ -16,7 +16,7 @@ const segmentStoreRegisterPin = new Gpio(5, 'in', 'both');         //
 const segmentBit0Pin = new Gpio(6, 'in', 'both');            //
 const segmentBit1Pin = new Gpio(7, 'in', 'both'); // eig. Pin 7
 
-const button1Pin = new Gpio(15, 'out', { activeLow: true });  // eig. Pin 8
+const button1Pin = new Gpio(8, 'out', { activeLow: true });  // eig. Pin 8
 const button2Pin = new Gpio(9, 'out', { activeLow: true });   //
 const button3Pin = new Gpio(10, 'out', { activeLow: true });  //
 
