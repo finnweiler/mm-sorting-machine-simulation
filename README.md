@@ -3,8 +3,6 @@
 
 ## Installation
 
-__Install node.js on your Raspberry Pi__
-
 update & upgrade:
 
 1. `sudo apt-get update`
@@ -19,13 +17,9 @@ check if node is installed:
 
 5. `node -v`
 
-__Clone the project__
-
 clone the github project:
 
 6. `git clone git@github.com:hans24o/mm-sorting-machine-simulation.git`
-
-__install dependencies__
 
 install npm dependencies:
 
