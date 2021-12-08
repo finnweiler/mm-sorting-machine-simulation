@@ -20,7 +20,7 @@ check if node is installed:
 
 clone the github repo:
 
-6. `git clone git@github.com:hans24o/mm-sorting-machine-simulation.git`
+6. `git clone git@github.com:finnweiler/mm-sorting-machine-simulation.git`
 
 install npm dependencies:
 
